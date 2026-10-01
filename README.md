@@ -2,10 +2,10 @@
 
 ## Team Members
 
-- [2401010354] [Priyal Sarda] — DNS Admin (Mac 1)
-- [2401010344] [Anusha Prathapani] — Edge Engineer (Mac 2)
-- [2401010215] [Kashika Agarwal] — Backend Dev A (Mac 3)
-- [2401010489] [Vaishnavi Dhanai] — Backend Dev B (Mac 4)
+- Priyal Sarda [2401010354] — DNS Admin (Mac 1)
+- Anusha Prathapani [2401010344] — Edge Engineer (Mac 2)
+- Kashika Agarwal [2401010215]— Backend Dev A (Mac 3)
+- Vaishnavi Dhanai [2401010489] — Backend Dev B (Mac 4)
 
 ## Architecture
 
