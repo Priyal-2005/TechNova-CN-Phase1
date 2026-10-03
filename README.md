@@ -18,7 +18,11 @@ Four machines, each with one role:
 
 Request flow: Client → DNS query (Mac 1) → HTTPS request (Mac 2) → Backend A or B (Mac 3/4)
 
-See `docs/topology-diagram.png` and `docs/architecture-doc.md` for full details.
+### Documentation & Evidence
+
+- **Architecture:** See [`docs/topology-diagram.png`](docs/topology-diagram.png) and [`docs/architecture.md`](docs/architecture.md) for full setup details.
+- **Failure Demonstrations:** See [`docs/Failures/failure-demos.md`](docs/Failures/failure-demos.md) for tests of system behavior under various failure conditions.
+- **Wireshark Evidence:** Packet captures and protocol handshakes (DNS, TCP, TLS) are in [`docs/wireshark-evidence/`](docs/wireshark-evidence/).
 
 ## How to Run the Backends
 
