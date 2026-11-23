@@ -1,0 +1,8 @@
+# Extension C - Restrict Backend B (TCP port 3002) to Mac 2
+# Applied on Mac 4 (Vaishnavi, Backend B host) via pfctl anchor com.apple/extension-c
+
+# Allow Anusha's Mac 2 to access Backend B
+pass in quick on en0 inet proto tcp from 10.7.30.136 to 10.7.25.170 port 3002 flags S/SA keep state
+
+# Block all other inbound IPv4 TCP connections to Backend B
+block drop in quick on en0 inet proto tcp from any to 10.7.25.170 port 3002
