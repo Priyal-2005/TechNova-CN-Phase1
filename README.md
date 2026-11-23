@@ -1,15 +1,15 @@
-# TechNova CN Project Phase 1
+# TechNova CN Project — Private Network Service Platform
 
 ## Team Members
 
-- Priyal Sarda [2401010354] — DNS Admin (Mac 1)
-- Anusha Prathapani [2401010344] — Edge Engineer (Mac 2)
-- Kashika Agarwal [2401010215]— Backend Dev A (Mac 3)
-- Vaishnavi Dhanai [2401010489] — Backend Dev B (Mac 4)
+- Priyal Sarda [2401010354] — DNS Admin (Mac 1) — Phase 2: Extensions D & E
+- Anusha Prathapani [2401010344] — Edge Engineer (Mac 2) — Phase 2: Extension C
+- Kashika Agarwal [2401010215] — Backend Dev A (Mac 3) — Phase 2: Extension B
+- Vaishnavi Dhanai [2401010489] — Backend Dev B (Mac 4) — Phase 2: Extension A
 
 ## Architecture
 
-Four machines, each with one role:
+Four machines, each with one role (unchanged across both phases):
 
 - **Mac 1**: Private DNS server (dnsmasq)
 - **Mac 2**: Edge — nginx reverse proxy, TLS termination, load balancing
@@ -18,71 +18,92 @@ Four machines, each with one role:
 
 Request flow: Client → DNS query (Mac 1) → HTTPS request (Mac 2) → Backend A or B (Mac 3/4)
 
+## Repository Structure
+
+```
+.
+├── phase-1/              Phase 1 — Build & Observe
+│   ├── backend-a/         Backend A source (Mac 3)
+│   ├── backend-b/         Backend B source (Mac 4)
+│   ├── certs/             Public TLS certificate (private key not committed)
+│   ├── dnsmasq/           Mac 1 DNS config
+│   ├── nginx/             Mac 2 edge/load-balancer config
+│   └── docs/              Architecture doc, topology diagram, failure demos, Wireshark evidence
+│
+└── phase-2/              Phase 2 — Harden, Recover & Troubleshoot
+    ├── dnsmasq-backup/     Extension A — backup DNS resolver config (Vaishnavi)
+    ├── nginx-standby/      Extension E — standby edge config for DNS-based cutover (Priyal)
+    ├── firewall/           Extension C — backend port isolation rules + rollback (Anusha)
+    └── docs/               Phase 2 task guide + evidence folder
+```
+
+## Phase 1 — Build & Observe
+
 ### Documentation & Evidence
 
-- **Architecture:** See [`docs/topology-diagram.png`](docs/topology-diagram.png) and [`docs/architecture.md`](docs/architecture.md) for full setup details.
-- **Failure Demonstrations:** See [`docs/Failures/failure-demos.md`](docs/Failures/failure-demos.md) for tests of system behavior under various failure conditions.
-- **Wireshark Evidence:** Packet captures and protocol handshakes (DNS, TCP, TLS) are in [`docs/wireshark-evidence/`](docs/wireshark-evidence/).
+- **Architecture:** [`phase-1/docs/topology-diagram.png`](phase-1/docs/topology-diagram.png) and [`phase-1/docs/architecture.md`](phase-1/docs/architecture.md)
+- **Failure Demonstrations:** [`phase-1/docs/Failures/failure-demos.md`](phase-1/docs/Failures/failure-demos.md)
+- **Wireshark Evidence:** [`phase-1/docs/wireshark-evidence/`](phase-1/docs/wireshark-evidence/)
 
-## How to Run the Backends
+### How to Run the Backends
 
-### Backend A (port 3001)
+**Backend A (port 3001):**
 
-Backend A is a Python REST API running on port 3001.
-
-#### Run Backend A
-
-    cd ~/cn-project/backend-a
+    cd phase-1/backend-a
     python3 app.py
 
-The server should display:
-
-    Backend A listening on port 3001
-
-#### Test Backend A
-
-Open another Terminal window and run:
+Test:
 
     curl -i http://localhost:3001/api/status
 
-Expected response should contain:
+Expected: `X-Backend: A`, `Cache-Control: max-age=60`, `{"backend": "A", "status": "ok"}`
 
-    X-Backend: A
-    Cache-Control: max-age=60
+**Backend B (port 3002):**
 
-and:
-
-    {"backend": "A", "status": "ok"}
-
-Backend A listens on 0.0.0.0:3001 so that other computers on the same network can access it.
-
-### Backend B (port 3002)
-
-    cd backend-b
+    cd phase-1/backend-b
     python3 app.py
 
 Test:
 
     curl http://localhost:3002/api/status
 
-## DNS Setup (dnsmasq — Mac 1)
+Both backends bind to `0.0.0.0` so other machines on the LAN can reach them.
 
-Config file: dnsmasq/dnsmasq.conf
+### DNS Setup (dnsmasq — Mac 1)
 
-To reproduce:
+Config: [`phase-1/dnsmasq/dnsmasq.conf`](phase-1/dnsmasq/dnsmasq.conf)
 
     brew install dnsmasq
-    cp dnsmasq/dnsmasq.conf /opt/homebrew/etc/dnsmasq.conf
+    cp phase-1/dnsmasq/dnsmasq.conf /opt/homebrew/etc/dnsmasq.conf
     sudo brew services start dnsmasq
 
-## Edge / Load Balancer Setup (nginx — Mac 2)
+### Edge / Load Balancer Setup (nginx — Mac 2)
 
-Config file: nginx/nginx.conf
-
-Certificate: certs/app.team1.test.crt (public cert only — private key is not committed)
-
-To reproduce:
+Config: [`phase-1/nginx/nginx.conf`](phase-1/nginx/nginx.conf)
+Certificate: [`phase-1/certs/app.technova.test.crt`](phase-1/certs/app.technova.test.crt) (public cert only — private key is not committed)
 
     brew install nginx
-    cp nginx/nginx.conf /opt/homebrew/etc/nginx/nginx.conf
+    cp phase-1/nginx/nginx.conf /opt/homebrew/etc/nginx/nginx.conf
     brew services start nginx
+
+## Phase 2 — Harden, Recover & Troubleshoot
+
+Phase 2 extends the same network above — nothing is rebuilt from scratch. The goal is resilience: the system should keep working, or fail cleanly and diagnosably, when something breaks.
+
+**Full task breakdown:** [`phase-2/docs/phase-2-task-guide.md`](phase-2/docs/phase-2-task-guide.md)
+
+| Extension | Owner | What it proves |
+|---|---|---|
+| A — Backup DNS Resolver | Vaishnavi | DNS has no single point of failure |
+| B — DNS TTL & Controlled Record Change | Kashika | Client-side caching behavior under TTL |
+| C — Service Isolation (Backend Firewall Rules) | Anusha | Clients can't bypass the edge |
+| D — High-Availability Failover | Priyal | Load balancer survives a dead backend |
+| E — Controlled Edge Migration (DNS Cutover) | Priyal | Edge can be moved without new hardware |
+| F — Faculty-Injected Troubleshooting Challenge | Everyone | Live, systematic fault diagnosis |
+
+**Evidence:** [`phase-2/docs/evidence/`](phase-2/docs/evidence/)
+
+### Key changes from Phase 1
+
+- `nginx.conf`'s `upstream backend_pool` now includes `max_fails=2 fail_timeout=10s` on each server, so a dead backend is marked down quickly instead of stalling every request for 60 seconds (Phase 1 Test 3's documented gap).
+- `dnsmasq.conf` now sets `local-ttl=60` for short, observable DNS caching. (`local-ttl=30` was tried first; macOS's resolver did not reliably auto-expire the cache at 30 seconds, so it was raised to 60 seconds.)
