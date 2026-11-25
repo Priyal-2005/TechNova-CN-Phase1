@@ -90,7 +90,7 @@ Certificate: [`phase-1/certs/app.technova.test.crt`](phase-1/certs/app.technova.
 
 Phase 2 extends the same network above — nothing is rebuilt from scratch. The goal is resilience: the system should keep working, or fail cleanly and diagnosably, when something breaks.
 
-**Full task breakdown:** [`phase-2/docs/phase-2-task-guide.md`](phase-2/docs/phase-2-task-guide.md)
+**Full task breakdown:**
 
 | Extension | Owner | What it proves |
 |---|---|---|
